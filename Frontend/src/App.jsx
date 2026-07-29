@@ -1,0 +1,37 @@
+import './App.css';
+import { RouterProvider } from "react-router";
+import { router } from "./app.routes.jsx";
+import { MyContext } from "./features/chat/MyContext.jsx";
+import { useState } from 'react';
+import { v1 as uuidv1 } from "uuid";
+import { AuthProvider } from "./features/auth/auth.context.jsx";
+
+function App() {
+  const [prompt, setPrompt] = useState("");
+  const [reply, setReply] = useState(null);
+  const [currThreadId, setCurrThreadId] = useState(uuidv1());
+  const [prevChats, setPrevChats] = useState([]); // stores all chats of curr thread
+  const [newChat, setNewChat] = useState(true);
+  const [allThreads, setAllThreads] = useState([]);
+
+  const providerValues = {
+    prompt, setPrompt,
+    reply, setReply,
+    currThreadId, setCurrThreadId,
+    newChat, setNewChat,
+    prevChats, setPrevChats,
+    allThreads, setAllThreads
+  };
+
+  return (
+    <div className='app'>
+      <AuthProvider>
+        <MyContext.Provider value={providerValues}>
+          <RouterProvider router={router} />
+        </MyContext.Provider>
+      </AuthProvider>
+    </div>
+  );
+}
+
+export default App;
