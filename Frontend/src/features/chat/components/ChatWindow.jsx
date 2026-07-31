@@ -5,7 +5,7 @@ import { useContext, useState, useEffect } from "react";
 import {ScaleLoader} from "react-spinners";
 import { useAuth } from "../../auth/hooks/useAuth.js";
 import { useNavigate } from "react-router";
-import api from "../../auth/api/auth.js"; // ⬅ adjust this path to wherever your auth.js (with the axios instance) actually lives
+import api from "../../auth/services/auth.api.js";
 
 function ChatWindow() {
     const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat} = useContext(MyContext);
