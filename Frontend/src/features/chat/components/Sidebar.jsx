@@ -3,7 +3,7 @@ import { useContext, useEffect } from "react";
 import { MyContext } from "../MyContext.jsx";
 import {v1 as uuidv1} from "uuid";
 import logo from "../../../assets/blacklogo.png";
-import api from "../../auth/api/auth.js"; // ⬅ adjust this path to wherever your auth.js (with the axios instance) actually lives
+import api from "../../auth/services/auth.api.js";
 
 function Sidebar() {
     const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats} = useContext(MyContext);
