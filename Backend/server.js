@@ -7,16 +7,27 @@ import authRouter from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser"
 
 const app = express();
+app.use(cookieParser());
 const port = process.env.PORT || 8080;
 
 app.use(express.json());
-app.use(
-    cors({
-      origin: "http://localhost:5173",
-      credentials: true,
-    })
-  );
-app.use(cookieParser());
+// Put all allowed URLs in an array
+const allowedOrigins = [
+  "http://localhost:5173",
+  process.env.FRONTEND_URL // Will read from hosting settings
+].filter(Boolean) // Cleans up empty values
+
+app.use(cors({
+  origin: function (origin, callback) {
+    // Allow Postman/mobile tools or matching origins
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true)
+    } else {
+      callback(new Error("CORS error: Not allowed"))
+    }
+  },
+  credentials: true
+}))
 
 app.use("/api", threadRouter);
 app.use("/api/auth",authRouter);
