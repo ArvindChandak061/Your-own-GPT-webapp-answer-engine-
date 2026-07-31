@@ -4,7 +4,8 @@ import { MyContext } from "../MyContext.jsx";
 import { useContext, useState, useEffect } from "react";
 import {ScaleLoader} from "react-spinners";
 import { useAuth } from "../../auth/hooks/useAuth.js";
-import { useNavigate } from "react-router"; 
+import { useNavigate } from "react-router";
+import api from "../../auth/api/auth.js"; // ⬅ adjust this path to wherever your auth.js (with the axios instance) actually lives
 
 function ChatWindow() {
     const {prompt, setPrompt, reply, setReply, currThreadId, setPrevChats, setNewChat} = useContext(MyContext);
@@ -12,40 +13,26 @@ function ChatWindow() {
     const [isOpen, setIsOpen] = useState(false);
     const { handleLogout , user } = useAuth();
     const navigate = useNavigate();
-
     const onLogoutClick = async () => {
-        await handleLogout();       // clears cookie + sets user to null in context
+        await handleLogout();       // clears token + sets user to null in context
         navigate("/login");          // redirect to login page
       };
-
     const getReply = async () => {
         setLoading(true);
         setNewChat(false);
-
         console.log("message ", prompt, " threadId ", currThreadId);
-        const options = {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json"
-            },
-            credentials: "include",
-            body: JSON.stringify({
+        try {
+            const response = await api.post("/api/chat", {
                 message: prompt,
                 threadId: currThreadId
-            })
-        };
-
-        try {
-            const response = await fetch("https://your-own-resume-guide-backend.onrender.com/api/chat", options);
-            const res = await response.json();
-            console.log(res);
-            setReply(res.reply);
+            });
+            console.log(response.data);
+            setReply(response.data.reply);
         } catch(err) {
             console.log(err);
         }
         setLoading(false);
     }
-
     //Append new chat to prevChats
     useEffect(() => {
         if(prompt && reply) {
@@ -59,15 +46,11 @@ function ChatWindow() {
                 }]
             ));
         }
-
         setPrompt("");
     }, [reply]);
-
-
     const handleProfileClick = () => {
         setIsOpen(!isOpen);
     }
-
     return (
         <div className="chatWindow">
             <div className="navbar">
@@ -85,7 +68,6 @@ function ChatWindow() {
                 </div>
             }
             <Chat></Chat>
-
             <ScaleLoader color="#fff" loading={loading}>
             </ScaleLoader>
             
@@ -107,5 +89,4 @@ function ChatWindow() {
         </div>
     )
 }
-
 export default ChatWindow;
