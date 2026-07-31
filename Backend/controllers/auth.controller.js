@@ -9,59 +9,41 @@ import tokenBlacklistModel from "../models/blacklist.model.js"
  * @access Public
  */
 async function registerUserController(req, res) {
-
     const { username, email, password } = req.body
-
     if (!username || !email || !password) {
         return res.status(400).json({
             message: "Please provide username, email and password"
         })
     }
-
     const isUserAlreadyExists = await userModel.findOne({
         $or: [{ username }, { email }]
     })
-
     if (isUserAlreadyExists) {
         return res.status(400).json({
             message: "Account already exists with this email address or username"
         })
     }
-
     const hash = await bcrypt.hash(password, 10)
-
     const user = await userModel.create({
         username,
         email,
         password: hash
     })
-
     const token = jwt.sign(
         { id: user._id, username: user.username },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
     )
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        path: "/",           // ✅ makes cookie available to ALL routes, not just /api/auth
-        sameSite: "none",
-        secure: true,       // enable this only when using HTTPS in production
-        maxAge: 24 * 60 * 60 * 1000, // 1 day, matches JWT expiresIn
-      });
-
-
     res.status(201).json({
         message: "User registered successfully",
+        token,
         user: {
             id: user._id,
             username: user.username,
             email: user.email
         }
     })
-
 }
-
 
 /**
  * @name loginUserController
@@ -69,41 +51,27 @@ async function registerUserController(req, res) {
  * @access Public
  */
 async function loginUserController(req, res) {
-
     const { email, password } = req.body
-
     const user = await userModel.findOne({ email }).select("+password")
-
     if (!user) {
         return res.status(400).json({
             message: "Invalid email or password"
         })
     }
-
     const isPasswordValid = await bcrypt.compare(password, user.password)
-
     if (!isPasswordValid) {
         return res.status(400).json({
             message: "Invalid email or password"
         })
     }
-
     const token = jwt.sign(
         { id: user._id, username: user.username },
         process.env.JWT_SECRET,
         { expiresIn: "1d" }
     )
-
-    res.cookie("token", token, {
-        httpOnly: true,
-        path: "/",           // ✅ makes cookie available to ALL routes, not just /api/auth
-        sameSite: "none",
-        secure: true,       // enable this only when using HTTPS in production
-        maxAge: 24 * 60 * 60 * 1000, // 1 day, matches JWT expiresIn
-      });
-
     res.status(200).json({
         message: "User loggedIn successfully.",
+        token,
         user: {
             id: user._id,
             username: user.username,
@@ -112,26 +80,24 @@ async function loginUserController(req, res) {
     })
 }
 
-
 /**
  * @name logoutUserController
- * @description clear token from user cookie and add the token in blacklist
- * @access public
+ * @description blacklist the current token so it can no longer be used
+ * @access private
  */
 async function logoutUserController(req, res) {
-    const token = req.cookies.token
+    const authHeader = req.headers.authorization
+    const token = authHeader && authHeader.startsWith("Bearer ")
+        ? authHeader.split(" ")[1]
+        : null
 
     if (!token) {
-        res.status(401).json({
+        return res.status(401).json({
             message: "token not found"
         })
     }
 
-    if (token) {
-        await tokenBlacklistModel.create({ token })
-    }
-
-    res.clearCookie("token", { path: "/" });
+    await tokenBlacklistModel.create({ token })
 
     res.status(200).json({
         message: "User logged out successfully"
@@ -144,11 +110,7 @@ async function logoutUserController(req, res) {
  * @access private
  */
 async function getMeController(req, res) {
-
     const user = await userModel.findById(req.user.id)
-
-
-
     res.status(200).json({
         message: "User details fetched successfully",
         user: {
@@ -157,10 +119,7 @@ async function getMeController(req, res) {
             email: user.email
         }
     })
-
 }
-
-
 
 export default {
     registerUserController,
