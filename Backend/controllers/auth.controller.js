@@ -46,7 +46,7 @@ async function registerUserController(req, res) {
         httpOnly: true,
         path: "/",           // ✅ makes cookie available to ALL routes, not just /api/auth
         sameSite: "lax",
-        // secure: true,       // enable this only when using HTTPS in production
+        secure: true,       // enable this only when using HTTPS in production
         maxAge: 24 * 60 * 60 * 1000, // 1 day, matches JWT expiresIn
       });
 
@@ -98,7 +98,7 @@ async function loginUserController(req, res) {
         httpOnly: true,
         path: "/",           // ✅ makes cookie available to ALL routes, not just /api/auth
         sameSite: "lax",
-        // secure: true,       // enable this only when using HTTPS in production
+        secure: true,       // enable this only when using HTTPS in production
         maxAge: 24 * 60 * 60 * 1000, // 1 day, matches JWT expiresIn
       });
 
