@@ -7,7 +7,7 @@ import authRouter from "./routes/auth.routes.js";
 import cookieParser from "cookie-parser"
 
 const app = express();
-const PORT = 8080;
+const port = process.env.PORT || 8080;
 
 app.use(express.json());
 app.use(
@@ -17,11 +17,6 @@ app.use(
     })
   );
 app.use(cookieParser());
-
-app.listen(PORT, () => {
-    console.log(`server running on ${PORT}`);
-    connectDB();
-});
 
 app.use("/api", threadRouter);
 app.use("/api/auth",authRouter);
@@ -34,6 +29,12 @@ const connectDB = async() => {
         console.log("Failed to connect with Db", err);
     }
 }
+
+
+app.listen(port, () => {
+    console.log(`server running on ${port}`);
+    connectDB();
+});
 
 // app.post("/test", async (req, res) => {
 //     const options = {
