@@ -3,16 +3,14 @@ import { useContext, useEffect } from "react";
 import { MyContext } from "../MyContext.jsx";
 import {v1 as uuidv1} from "uuid";
 import logo from "../../../assets/blacklogo.png";
+import api from "../../auth/api/auth.js"; // ⬅ adjust this path to wherever your auth.js (with the axios instance) actually lives
 
 function Sidebar() {
     const {allThreads, setAllThreads, currThreadId, setNewChat, setPrompt, setReply, setCurrThreadId, setPrevChats} = useContext(MyContext);
-
     const getAllThreads = async () => {
         try {
-            const response = await fetch("https://your-own-resume-guide-backend.onrender.com/api/thread", {
-                credentials: "include" 
-              });
-            const res = await response.json();
+            const response = await api.get("/api/thread");
+            const res = response.data;
             const filteredData = res.map(thread => ({threadId: thread.threadId, title: thread.title}));
             //console.log(filteredData);
             setAllThreads(filteredData);
@@ -20,12 +18,9 @@ function Sidebar() {
             console.log(err);
         }
     };
-
     useEffect(() => {
         getAllThreads();
     }, [currThreadId])
-
-
     const createNewChat = () => {
         setNewChat(true);
         setPrompt("");
@@ -33,15 +28,11 @@ function Sidebar() {
         setCurrThreadId(uuidv1());
         setPrevChats([]);
     }
-
     const changeThread = async (newThreadId) => {
         setCurrThreadId(newThreadId);
-
         try {
-            const response = await fetch(`https://your-own-resume-guide-backend.onrender.com/api/thread/${newThreadId}`, {
-                credentials: "include"  
-              });
-            const res = await response.json();
+            const response = await api.get(`/api/thread/${newThreadId}`);
+            const res = response.data;
             console.log(res);
             setPrevChats(res);
             setNewChat(false);
@@ -50,33 +41,26 @@ function Sidebar() {
             console.log(err);
         }
     }   
-
     const deleteThread = async (threadId) => {
         try {
-            const response = await fetch(`https://your-own-resume-guide-backend.onrender.com/api/thread/${threadId}`, {method: "DELETE", credentials: "include"});
-            const res = await response.json();
+            const response = await api.delete(`/api/thread/${threadId}`);
+            const res = response.data;
             console.log(res);
-
             //updated threads re-render
             setAllThreads(prev => prev.filter(thread => thread.threadId !== threadId));
-
             if(threadId === currThreadId) {
                 createNewChat();
             }
-
         } catch(err) {
             console.log(err);
         }
     }
-
     return (
         <section className="sidebar">
             <button onClick={createNewChat}>
                 <img src={logo} alt="gpt logo" className="logo"></img>
                 <span><i className="fa-solid fa-pen-to-square"></i></span>
             </button>
-
-
             <ul className="history">
                 {
                     allThreads?.map((thread, idx) => (
@@ -102,5 +86,4 @@ function Sidebar() {
         </section>
     )
 }
-
 export default Sidebar;
